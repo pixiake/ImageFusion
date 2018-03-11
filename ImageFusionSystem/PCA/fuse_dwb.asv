@@ -1,0 +1,116 @@
+%基于小波的图像融合算法
+function [c] = fuse_dwb(X1, X2)
+[c1,s1]=wavedec2(X1,1,'sym4');
+[c2,s2]=wavedec2(X2,1,'sym4');
+% cA31=appcoef2(c1,s1,'sym4',3);
+% cH31=detcoef2('h',c1,s1,3);
+% cV31=detcoef2('v',c1,s1,3);
+% cD31=detcoef2('d',c1,s1,3);
+% 
+% cH21=detcoef2('h',c1,s1,2);    
+% cV21=detcoef2('v',c1,s1,2);
+% cD21=detcoef2('d',c1,s1,2);
+cA11=appcoef2(c1,s1,'sym4',1);
+cH11=detcoef2('h',c1,s1,1);
+cV11=detcoef2('v',c1,s1,1);
+cD11=detcoef2('d',c1,s1,1);
+
+
+% cA32=appcoef2(c2,s2,'sym4',3);
+% cH32=detcoef2('h',c2,s2,3);
+% cV32=detcoef2('v',c2,s2,3);
+% cD32=detcoef2('d',c2,s2,3);
+% cH22=detcoef2('h',c2,s2,2);
+% cV22=detcoef2('v',c2,s2,2);
+% cD22=detcoef2('d',c2,s2,2);
+cA12=appcoef2(c2,s2,'sym4',1);
+cH12=detcoef2('h',c2,s2,1);
+cV12=detcoef2('v',c2,s2,1);
+cD12=detcoef2('d',c2,s2,1);
+
+R=100;
+%将低频系数乘1/R
+cA11=cA11*(1/R);
+cA12=cA12*(1/R);
+%用新的低频系数和原来的高频系数一起重构新图象
+A1=waverec2(c1,s1,'sym4');
+B1=waverec2(c2,s2,'sym4');
+subplot(223);
+imshow(A1);
+subplot(224);
+imshow(B1);
+%用3*3滑动窗口求每个象素的能量
+%A11=nlfilter(A1,[3 3],@myfunction5);
+%B11=nlfilter(B1,[3 3],@myfunction5);
+A11=nlfilter(A1,[3 3],@myfunction5);
+B11=nlfilter(B1,[3 3],@myfunction5);
+[m,n]=size(A11);
+for i=1:m
+    for j=1:n
+        if abs(A11(i,j))>abs(B11(i,j))
+            c(i,j)=A1(i,j);
+        else
+            c(i,j)=B1(i,j);
+        end
+    end
+end
+        
+    
+
+
+
+
+% cA31=cA31.^2;
+% cA32=cA32.^2;
+% cA33=cA31.*cA32;
+% 
+% Ea=nlfilter(cA31,[3 3],@myfunction1);
+% Eb=nlfilter(cA32,[3 3],@myfunction1);
+% E=nlfilter(cA33,[3 3],@myfunction1);
+% T=1.5;
+% for i=1:numel(Ea)
+% M(i)=2*E(i)/(Ea(i)+Eb(i));
+% Wmin(i)=0.5-0.5*((1-M(i))/(1-T));
+% 
+% end
+% Wmax=1-Wmin;
+% for k=1:numel(M)
+% if M(k)<T
+%     for i=1:numel(Ea)
+%         if Ea(i)>Eb(i)
+%             c(i)=cA31(i);
+%         else
+%             c(i)=cA32(i);
+%         end
+%     end
+% else
+%     for j=1:numel(Ea)
+%         if Ea(j)>Eb(j)
+%             c(j)=Wmax(j)*cA31(j)+Wmin(j)*cA32(j);
+%         else
+%             c(j)=Wmin(j)*cA31(j)+Wmax(j)*cA32(j);
+%         end
+%     end
+% end
+% end
+% 
+% for i=(numel(cA31)+1):numel(c1)
+%     if  abs(c1(i))>abs(c2(i))
+%         c(i)=c1(i);
+%     else
+%         c(i)=c2(i);
+%     end 
+% end
+
+        
+
+%应用融合系数进行图像重构并显示
+% xx=waverec2(c,s1,'sym4');
+% xx=uint8(round(xx*255));
+% subplot(224);
+figure;
+imshow(c);
+%imwrite(c,'rh.bmp');
+% colormap(map1);
+axis square
+title('融合图象1');
